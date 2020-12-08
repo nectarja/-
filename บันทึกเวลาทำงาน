@@ -1,0 +1,65 @@
+// เขียนโค้ด โดย น้ำทิพย์ ชัยวนนท์ (ทิพย์สุขจัง)
+// ผู้สอน : ครูอภิวัฒน์ สอนสร้างสื่อ
+// ผู้เปิดโอกาส : อ.สมพงษ์ โพคาศรี
+
+var token_array = ["xxx",
+                   "yyy",
+                   "zzz"];
+                   
+function myFunction() {
+
+  var today = Utilities.formatDate(new Date(), "GMT+7", "dd/MM/") +
+              Number(Utilities.formatDate(new Date(), "GMT+7", "yyyy")) + 543
+
+  var ss = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("บันทึกการทำงาน");
+  var names = ss.getRange(1, 3, 1, ss.getLastColumn()-2).getValues()[0];
+  var range_last = ss.getRange(ss.getLastRow(), 1, 1, ss.getLastColumn()).getValues()[0];
+  var range_all = ss.getRange(1, 1, ss.getLastRow(), ss.getLastColumn()).getValues()[0];
+  var num_person = names.length;
+  
+  var index = 1;
+  var num_person_absent = range_all.filter(action => action == "ขาด" || action == "ลา").length;
+  var num_person_late = range_all.filter(action => action == "สาย").length;
+  var num_normal = num_person - num_person_absent;
+  var result = "";
+  
+  range_last.forEach(
+    (time_of_user, i) => {
+        if (time_of_user == "สาย" || time_of_user == "ขาด" || time_of_user == "ลา") {
+          result += "\n" + (index++) + ". " + names[i+2] + " : " + time_of_user;
+        }
+    }
+  );
+  
+  var msg_line = "วันที่ " + today + "\n" +
+            "มาทำงานทั้งหมด " + num_normal + " คน\n" + 
+            "ไม่มาทำงาน " + num_person_absent + " คน\n" + 
+            "สาย " + num_person_late + " คน\n" + 
+            "ได้แก่\n" +
+            result;
+            
+  token_array.forEach(token_str => sendNotify(msg_line, token_str));
+}
+
+// --------------------------------------------------------------------
+// Function : ส่ง Line Notify
+// --------------------------------------------------------------------
+function sendNotify(msg_line, token){
+
+  if (msg_line != "") {
+    let token = [TOKEN_FILE]; //***ใส่ token - MyNotify
+    let payloadJson = {
+      "message": msg_line
+    };
+    let options = {
+      "method": "post",
+      "payload": payloadJson,
+      "headers": {
+        "Authorization": "Bearer " + token
+      }
+    };
+    UrlFetchApp.fetch("https://notify-api.line.me/api/notify", options);
+  }
+
+}
+
